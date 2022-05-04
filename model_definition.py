@@ -22,7 +22,7 @@ class Prey(Agent):
 
     def __init__(self, id, model):
         super().__init__(id, model)
-        self.energy = 1000
+        self.energy = 500
         self.sprite = None
 
     def step(self):
@@ -72,7 +72,7 @@ class Predator(Agent):
 
     def __init__(self, id, model):
         super().__init__(id, model)
-        self.energy = 500
+        self.energy = 250
         self.sprite = None
 
     def step(self):
