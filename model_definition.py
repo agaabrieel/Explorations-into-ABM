@@ -2,7 +2,6 @@ from mesa import Model, Agent
 from mesa.time import RandomActivation
 from mesa.space import MultiGrid
 from mesa.datacollection import DataCollector
-import numpy as np
 
 class Prey(Agent):
 
