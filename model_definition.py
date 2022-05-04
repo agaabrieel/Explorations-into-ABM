@@ -156,7 +156,7 @@ class ABM(Model):
 
             x, y = self.random.randrange(self.grid.width), self.random.randrange(self.grid.height)
             self.grid.place_agent(new_agent, (x, y))
-            new_agent.sprite = pyglet.shapes.Rectangle(new_agent.pos[0] + 200, new_agent.pos[1] + 50, 1, 1, color = (0, 2*new_agent.amount, 0))
+            new_agent.sprite = pyglet.shapes.Rectangle(new_agent.pos[0] + 200, new_agent.pos[1] + 50, 1, 1, color = (0, 8*new_agent.amount, 0))
 
 
         self.datacollector = DataCollector(
