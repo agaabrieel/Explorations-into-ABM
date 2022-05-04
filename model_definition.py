@@ -2,11 +2,13 @@ from mesa import Model, Agent
 from mesa.time import RandomActivation
 from mesa.space import MultiGrid
 from mesa.datacollection import DataCollector
+import pyglet
 
 class Prey(Agent):
 
     def __init__(self, id, model):
         super().__init__(id, model)
+        self.sprite = None
 
     def step(self):
         print(f'My current position is: {self.pos}')
@@ -26,6 +28,7 @@ class Predator(Agent):
     def __init__(self, id, model):
         super().__init__(id, model)
         self.energy = 100
+        self.sprite = None
 
     def step(self):
         print(f'My current position is: {self.pos}')
@@ -38,7 +41,7 @@ class Predator(Agent):
         self.eat()
 
         if self.energy == 0:
-            self.model.current_predator -= 1
+            self.model.current_predator.remove(self)
             self.model.grid.remove_agent(self)
             self.model.schedule.remove(self)
 
@@ -54,9 +57,9 @@ class Predator(Agent):
             for mate in cellmates:
                 if isinstance(mate, Prey):
                     print(f'The prey {mate.unique_id} is in the position {self.pos} with me! I am gonna eat it!')
+                    self.model.current_prey.remove(mate)
                     self.model.grid.remove_agent(mate)
                     self.model.schedule.remove(mate)
-                    self.model.current_prey -= 1
                     print(f'My energy is {self.energy}')
                     self.energy += 5
                     print(f'After eating, it now is {self.energy}')
@@ -72,29 +75,33 @@ class ABM(Model):
         self.num_prey = N_prey
         self.schedule = RandomActivation(self)
         self.grid = MultiGrid(w, h, False)
-        self.current_prey = self.num_prey
-        self.current_predator = self.num_predator
+        self.current_prey = []
+        self.current_predator = []
 
         # Gerando presas
         for i in range(self.num_prey):
             new_agent = Prey(i, self)
+            self.current_prey.append(new_agent)
             self.schedule.add(new_agent)
 
             x, y = self.random.randrange(self.grid.width), self.random.randrange(self.grid.height)
             self.grid.place_agent(new_agent, (x, y))
+            new_agent.sprite = pyglet.shapes.Circle(new_agent.pos[0], new_agent.pos[1], 1, color = (0, 255, 0))
 
-        # Gerando predatores
+        # Gerando predadores
         for i in range(self.num_predator):
             new_agent = Predator(N_prey + i, self)
+            self.current_predator.append(new_agent)
             self.schedule.add(new_agent)
 
             x, y = self.random.randrange(self.grid.width), self.random.randrange(self.grid.height)
             self.grid.place_agent(new_agent, (x, y))
+            new_agent.sprite = pyglet.shapes.Circle(new_agent.pos[0], new_agent.pos[1], 1, color = (255, 0, 0))
 
         self.datacollector = DataCollector(
             model_reporters = {"agent count": lambda m: m.schedule.get_agent_count(),
-                                "prey count": lambda m: m.current_prey,
-                                "predator count": lambda m: m.current_predator}, 
+                                "prey count": lambda m: len(m.current_prey),
+                                "predator count": lambda m: len(m.current_predator)}, 
             agent_reporters = {"predator energy": lambda a: a.energy if isinstance(a, Predator) else None})
 
     def step(self):
