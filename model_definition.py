@@ -4,6 +4,15 @@ from mesa.space import MultiGrid
 from mesa.datacollection import DataCollector
 import pyglet
 
+class Food(Agent):
+    def __init__(self, id, model):
+        super().__init__(id, model)
+        self.amount = 50
+        self.sprite = None
+
+    def step(self):
+        self.amount = min(50, self.amount + 1)
+
 class Prey(Agent):
 
     def __init__(self, id, model):
@@ -17,11 +26,26 @@ class Prey(Agent):
                                 moore = True, 
                                 include_center = False)
         self.move(neighborhood)
+        self.eat()
 
     def move(self, neighborhood):
         new_pos = self.random.choice(neighborhood)
         print(f'I am moving to {new_pos}')
         self.model.grid.move_agent(self, new_pos)
+
+    def eat(self):
+        cellmates = self.model.grid.get_cell_list_contents([self.pos])
+        if len(cellmates) > 1:
+            for mate in cellmates:
+                if isinstance(mate, Food):
+                    print(f'The food {mate.unique_id} is in the position {self.pos} with me! I am gonna eat it!')
+                    mate.amount -= 1
+                    self.model.grid.remove_agent(mate)
+                    self.model.schedule.remove(mate)
+                    print(f'My energy is {self.energy}')
+                    self.energy = min(100, self.energy + 5)
+                    print(f'After eating, it now is {self.energy}')
+        else: pass
 
 class Predator(Agent):
 
@@ -61,9 +85,8 @@ class Predator(Agent):
                     self.model.grid.remove_agent(mate)
                     self.model.schedule.remove(mate)
                     print(f'My energy is {self.energy}')
-                    self.energy += 5
+                    self.energy = min(100, self.energy + 5)
                     print(f'After eating, it now is {self.energy}')
-                    self.energy = min(100, self.energy)
         else: pass
 
             
@@ -86,7 +109,7 @@ class ABM(Model):
 
             x, y = self.random.randrange(self.grid.width), self.random.randrange(self.grid.height)
             self.grid.place_agent(new_agent, (x, y))
-            new_agent.sprite = pyglet.shapes.Circle(new_agent.pos[0], new_agent.pos[1], 1, color = (0, 255, 0))
+            new_agent.sprite = pyglet.shapes.Circle(new_agent.pos[0] + 300, new_agent.pos[1] + 300, 1, color = (0, 0, 255))
 
         # Gerando predadores
         for i in range(self.num_predator):
@@ -96,7 +119,13 @@ class ABM(Model):
 
             x, y = self.random.randrange(self.grid.width), self.random.randrange(self.grid.height)
             self.grid.place_agent(new_agent, (x, y))
-            new_agent.sprite = pyglet.shapes.Circle(new_agent.pos[0], new_agent.pos[1], 1, color = (255, 0, 0))
+            new_agent.sprite = pyglet.shapes.Circle(new_agent.pos[0] + 300, new_agent.pos[1] + 300, 1, color = (255, 0, 0))
+
+        # Gerando alimento para presas
+        for w in range(self.w):
+            for h in range(self.h):
+                new_agent = Food(int(f'{w}{h}'), self)
+                self.schedule.add(new_agent)
 
         self.datacollector = DataCollector(
             model_reporters = {"agent count": lambda m: m.schedule.get_agent_count(),

@@ -6,7 +6,7 @@ window = pyglet.window.Window(1024, 768)
 
 @window.event 
 def on_draw():
-    
+
     window.clear()
     
     for prey in Model.current_prey:
@@ -29,6 +29,6 @@ def main():
     print(agent_data.describe(), agent_data.head())
 
 if __name__ == '__main__':
-    Model = ABM(1000, 500, 1024, 768)
-    pyglet.clock.schedule_interval(model_update, 1/5)
+    Model = ABM(100, 50, 100, 100)
+    pyglet.clock.schedule_interval(model_update, 1/120)
     main()
