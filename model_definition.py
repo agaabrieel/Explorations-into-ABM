@@ -7,7 +7,7 @@ import pyglet
 class Food(Agent):
     def __init__(self, id, model):
         super().__init__(id, model)
-        self.amount = 100
+        self.amount = 30
         self.sprite = None
 
     def step(self):
@@ -30,8 +30,10 @@ class Prey(Agent):
                                 self.pos, 
                                 moore = True, 
                                 include_center = False)
+        self.eat()
         self.move(neighborhood)
         self.eat()
+        self.reproduce()
 
         if self.energy == 0:
             self.model.current_prey.remove(self)
@@ -51,14 +53,26 @@ class Prey(Agent):
                     mate.amount -= 1
                     self.model.grid.remove_agent(mate)
                     self.model.schedule.remove(mate)
-                    self.energy = min(100, self.energy + 5)
+                    self.energy = min(1000, self.energy + 5)
         else: pass
+
+    def reproduce(self):
+        if self.energy/1000 >= 0.9:
+            self.energy *= 0.5
+            child = Prey(self.model.random.randint(10000000, 1000000000), self.model)
+            self.model.schedule.add(child)
+            self.model.current_prey.append(child)
+            print("I'm a prey and I just reproduced!!")
+
+            x, y = self.pos[0], self.pos[1]
+            self.model.grid.place_agent(child, (x, y))
+            child.sprite = pyglet.shapes.Circle(child.pos[0] + 200, child.pos[1] + 50, 1, color = (0, 0, 255))
 
 class Predator(Agent):
 
     def __init__(self, id, model):
         super().__init__(id, model)
-        self.energy = 1000
+        self.energy = 500
         self.sprite = None
 
     def step(self):
@@ -67,8 +81,10 @@ class Predator(Agent):
                                 moore = True, 
                                 include_center = False)
 
+        self.eat()
         self.move(neighborhood)
         self.eat()
+        self.reproduce()
 
         if self.energy == 0:
             self.model.current_predator.remove(self)
@@ -88,16 +104,26 @@ class Predator(Agent):
                     self.model.current_prey.remove(mate)
                     self.model.grid.remove_agent(mate)
                     self.model.schedule.remove(mate)
-                    self.energy = min(100, self.energy + 5)
+                    self.energy = min(500, self.energy + 5)
         else: pass
 
-            
+    def reproduce(self):
+        if self.energy/500 >= 0.95:
+            self.energy *= 0.5
+            child = Predator(self.model.random.randint(10000000, 1000000000), self.model)
+            self.model.schedule.add(child)
+            self.model.current_predator.append(child)
+            print("I'm a predator and I just reproduced!!")
+
+            x, y = self.pos[0], self.pos[1]
+            self.model.grid.place_agent(child, (x, y))
+            child.sprite = pyglet.shapes.Circle(child.pos[0] + 200, child.pos[1] + 50, 1, color = (255, 0, 0))            
 
 class ABM(Model):
 
     def __init__(self, N_prey, N_predator, N_food, w, h):
         self.schedule = RandomActivation(self)
-        self.grid = MultiGrid(w, h, False)
+        self.grid = MultiGrid(w, h, True)
         self.current_prey = []
         self.current_predator = []
         self.food_sources = []
