@@ -32,6 +32,6 @@ def main():
     plt.show()
 
 if __name__ == '__main__':
-    Model = ABM(100, 30, 50000, 600, 600)
+    Model = ABM(1000, 300, 50000, 600, 600)
     pyglet.clock.schedule_interval(model_update, 1/120)
     main()
